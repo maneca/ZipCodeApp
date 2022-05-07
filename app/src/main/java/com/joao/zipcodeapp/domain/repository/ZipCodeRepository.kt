@@ -5,7 +5,13 @@ import com.joao.zipcodeapp.util.Resource
 import kotlinx.coroutines.flow.Flow
 
 interface ZipCodeRepository {
-    fun getZipCodes(): Flow<Resource<List<ZipCode>>>
+    fun getZipCodesFromLocalDatabase(): Flow<Resource<List<ZipCode>>>
+
+    fun getZipCodesFromNetwork()
 
     fun populateDatabase(): Flow<Boolean>
+
+    fun isDatabaseEmpty(): Flow<Boolean>
+
+    fun searchZipCode(text: String): Flow<Resource<List<ZipCode>>>
 }

@@ -18,7 +18,7 @@ import javax.inject.Inject
 class ZipCodeViewModel @Inject constructor(
     private val dispatcher: DispatcherProvider,
     private val repository: ZipCodeRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ZipCodeState())
     val state = _state.asStateFlow()
@@ -27,32 +27,38 @@ class ZipCodeViewModel @Inject constructor(
         getZipCodes()
     }
 
-    private fun getZipCodes(){
+    private fun getZipCodes() {
         viewModelScope.launch {
             repository
-                .getZipCodes()
+                .isDatabaseEmpty()
                 .flowOn(dispatcher.io())
-                .collect{result ->
-                    when(result){
-                        is Resource.Success ->{
+                .collect {
+                    if (it) {
+                        repository.getZipCodesFromNetwork()
+                    } else {
+                        getZipCodesFromLocalDatabase()
+                    }
+                }
+        }
+    }
+
+    private fun getZipCodesFromLocalDatabase() {
+        viewModelScope.launch {
+            repository
+                .getZipCodesFromLocalDatabase()
+                .flowOn(dispatcher.io())
+                .collect { result ->
+                    when (result) {
+                        is Resource.Success -> {
                             _state.value = state.value.copy(
-                                newsItems = result.data ?: emptyList(),
-                                exception = null,
-                                loading = false
+                                zipCodes = result.data ?: emptyList(),
+                                exception = null
                             )
                         }
                         is Resource.Error -> {
                             _state.value = state.value.copy(
-                                newsItems = result.data ?: emptyList(),
+                                zipCodes = result.data ?: emptyList(),
                                 exception = result.exception ?: CustomExceptions.UnknownException,
-                                loading = false
-                            )
-                        }
-                        is Resource.Loading -> {
-                            _state.value = state.value.copy(
-                                newsItems = result.data ?: emptyList(),
-                                exception = null,
-                                loading = true
                             )
                         }
                     }
@@ -61,12 +67,46 @@ class ZipCodeViewModel @Inject constructor(
         }
     }
 
-    fun populateDatabase(){
+    fun populateDatabase() {
         viewModelScope.launch {
             repository
                 .populateDatabase()
                 .flowOn(dispatcher.io())
                 .collect()
         }
+    }
+
+    fun searchZipCode(query: String) {
+        viewModelScope.launch {
+            repository
+                .searchZipCode(sanitizeSearchQuery(query))
+                .flowOn(dispatcher.io())
+                .collect { result ->
+                    when (result) {
+                        is Resource.Success -> {
+                            _state.value = state.value.copy(
+                                zipCodes = result.data ?: emptyList(),
+                                exception = null
+                            )
+                        }
+                        is Resource.Error -> {
+                            _state.value = state.value.copy(
+                                zipCodes = result.data ?: emptyList(),
+                                exception = result.exception ?: CustomExceptions.UnknownException,
+                            )
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun sanitizeSearchQuery(query: String): String {
+        val strings = query.split(" ")
+        val stringsEscaped = strings.map {
+            val queryWithEscapedQuotes = it.replace(Regex.fromLiteral("\""), "\"\"")
+            "*$queryWithEscapedQuotes*"
+        }
+        //val queryWithEscapedQuotes = query.replace(Regex.fromLiteral("\""), "\"\"")
+        return stringsEscaped.joinToString(separator = " OR ")
     }
 }

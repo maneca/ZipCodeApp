@@ -8,7 +8,7 @@ import android.os.Environment
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.joao.zipcodeapp.data.local.ZipCodeEntity
+import com.joao.zipcodeapp.data.local.entity.ZipCodeEntity
 import com.joao.zipcodeapp.domain.remote.ZipCodeApi
 import java.io.File
 

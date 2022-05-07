@@ -2,6 +2,8 @@ package com.joao.zipcodeapp.di
 
 import android.app.Application
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.joao.zipcodeapp.data.local.ZipCodeDatabase
 import com.joao.zipcodeapp.data.remote.ZipCodeApiImp
 import com.joao.zipcodeapp.data.repository.ZipCodeRepositoryImp
@@ -41,9 +43,16 @@ class ZipCodeModule {
     @Provides
     @Singleton
     fun provideZipCodesDatabase(app: Application): ZipCodeDatabase{
-        return Room.databaseBuilder(
-            app, ZipCodeDatabase::class.java, "zipCodes_db"
-        ).build()
+        return Room.databaseBuilder(app, ZipCodeDatabase::class.java, "zipCodes_db")
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    // 3
+                    db.execSQL("INSERT INTO zipcodes_fts(zipcodes_fts) VALUES ('rebuild')")
+                }
+            })
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

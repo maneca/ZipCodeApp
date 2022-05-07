@@ -1,6 +1,6 @@
 package com.joao.zipcodeapp.domain.remote
 
-import com.joao.zipcodeapp.data.local.ZipCodeEntity
+import com.joao.zipcodeapp.data.local.entity.ZipCodeEntity
 
 interface ZipCodeApi {
 
