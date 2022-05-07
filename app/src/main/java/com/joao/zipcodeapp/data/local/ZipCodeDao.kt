@@ -12,7 +12,7 @@ interface ZipCodeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertZipCodes(zipCodes: List<ZipCodeEntity>)
 
-    @Query("SELECT * FROM zipCodes")
+    @Query("SELECT * FROM zipCodes ORDER BY codigoPostal ASC")
     suspend fun getZipCodes(): List<ZipCodeEntity>
 
     @Query("""

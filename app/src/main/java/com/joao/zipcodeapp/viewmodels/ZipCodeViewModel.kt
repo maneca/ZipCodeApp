@@ -1,5 +1,7 @@
 package com.joao.zipcodeapp.viewmodels
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.joao.zipcodeapp.domain.repository.ZipCodeRepository
 import com.joao.zipcodeapp.util.DispatcherProvider
@@ -7,10 +9,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.joao.zipcodeapp.util.CustomExceptions
 import com.joao.zipcodeapp.util.Resource
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOn
+import com.joao.zipcodeapp.util.UiEvent
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,12 +25,21 @@ class ZipCodeViewModel @Inject constructor(
     private val _state = MutableStateFlow(ZipCodeState())
     val state = _state.asStateFlow()
 
+    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
+    private val _searchQuery = mutableStateOf("")
+    val searchQuery: State<String> = _searchQuery
+
+    private var searchJob: Job? = null
+
     init {
         getZipCodes()
     }
 
     private fun getZipCodes() {
         viewModelScope.launch {
+            _eventFlow.emit(UiEvent.Loading)
             repository
                 .isDatabaseEmpty()
                 .flowOn(dispatcher.io())
@@ -54,6 +65,7 @@ class ZipCodeViewModel @Inject constructor(
                                 zipCodes = result.data ?: emptyList(),
                                 exception = null
                             )
+                            _eventFlow.emit(UiEvent.ZipCodesLoaded)
                         }
                         is Resource.Error -> {
                             _state.value = state.value.copy(
@@ -72,41 +84,52 @@ class ZipCodeViewModel @Inject constructor(
             repository
                 .populateDatabase()
                 .flowOn(dispatcher.io())
-                .collect()
-        }
-    }
-
-    fun searchZipCode(query: String) {
-        viewModelScope.launch {
-            repository
-                .searchZipCode(sanitizeSearchQuery(query))
-                .flowOn(dispatcher.io())
-                .collect { result ->
-                    when (result) {
-                        is Resource.Success -> {
-                            _state.value = state.value.copy(
-                                zipCodes = result.data ?: emptyList(),
-                                exception = null
-                            )
-                        }
-                        is Resource.Error -> {
-                            _state.value = state.value.copy(
-                                zipCodes = result.data ?: emptyList(),
-                                exception = result.exception ?: CustomExceptions.UnknownException,
-                            )
-                        }
+                .collect{
+                    if(it){
+                        getZipCodesFromLocalDatabase()
                     }
                 }
         }
     }
 
+    fun searchZipCode(query: String) {
+        _searchQuery.value = query
+        searchJob?.cancel()
+        if(query.isEmpty() || query.isBlank()){
+            getZipCodesFromLocalDatabase()
+        }else{
+            searchJob = viewModelScope.launch {
+                delay(500L)
+                repository
+                    .searchZipCode(sanitizeSearchQuery(query))
+                    .flowOn(dispatcher.io())
+                    .collect { result ->
+                        when (result) {
+                            is Resource.Success -> {
+                                _state.value = state.value.copy(
+                                    zipCodes = result.data ?: emptyList(),
+                                    exception = null
+                                )
+                            }
+                            is Resource.Error -> {
+                                _state.value = state.value.copy(
+                                    zipCodes = result.data ?: emptyList(),
+                                    exception = result.exception ?: CustomExceptions.UnknownException,
+                                )
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
     private fun sanitizeSearchQuery(query: String): String {
-        val strings = query.split(" ")
+        val strings = query.trim().split(" ")
         val stringsEscaped = strings.map {
             val queryWithEscapedQuotes = it.replace(Regex.fromLiteral("\""), "\"\"")
             "*$queryWithEscapedQuotes*"
         }
-        //val queryWithEscapedQuotes = query.replace(Regex.fromLiteral("\""), "\"\"")
+
         return stringsEscaped.joinToString(separator = " OR ")
     }
 }
