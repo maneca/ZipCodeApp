@@ -6,4 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface ZipCodeRepository {
     fun getZipCodes(): Flow<Resource<List<ZipCode>>>
+
+    fun populateDatabase(): Flow<Boolean>
 }

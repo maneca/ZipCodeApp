@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
 
                 SystemBroadcastReceiver(DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
                     isLoading.value = false
+                    viewModel.populateDatabase()
                 }
 
                 if(isLoading.value){

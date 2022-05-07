@@ -7,9 +7,10 @@ import android.net.Uri
 import android.os.Environment
 import android.webkit.CookieManager
 import android.webkit.URLUtil
+import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import com.joao.zipcodeapp.data.local.ZipCodeEntity
 import com.joao.zipcodeapp.domain.remote.ZipCodeApi
-import com.joao.zipcodeapp.util.CSVReader
-import java.io.FileReader
+import java.io.File
 
 class ZipCodeApiImp(
     private val context: Context
@@ -30,38 +31,20 @@ class ZipCodeApiImp(
         downloadManager.enqueue(request)
     }
 
-    private fun importCSV(title: String){
-        val csvReader =
-            CSVReader(FileReader("${Environment.DIRECTORY_DOWNLOADS}/CSV/$title.csv"))
-        /* path of local storage (it should be your csv file locatioin)*/
-        var nextLine: Array<String> ? = null
-        var count = 0
-        val columns = StringBuilder()
-            do {
-                val value = StringBuilder()
-                nextLine = csvReader.readNext()
-                nextLine.let { line->
-                    if (line != null) {
-                        for (i in 0 until line.size - 1) {
-                            if (count == 0) {                             // the count==0 part only read
-                                if (i == line.size - 2) {             //your csv file column name
-                                    columns.append(line[i])
-                                    count =1
-                                } else
-                                    columns.append(line[i]).append(",")
-                            } else {                         // this part is for reading value of each row
-                                if (i == line.size - 2) {
-                                    value.append("'").append(line[i]).append("'")
-                                    count = 2
-                                } else
-                                    value.append("'").append(line[i]).append("',")
-                            }
-                        }
-                    }
-                    if (count==2) {
-                        var a = 2
-                    }
-                }
-            }while ((nextLine)!=null)
+    override fun readCSV(title: String): List<ZipCodeEntity>{
+        val zipCodes = mutableListOf<ZipCodeEntity>()
+        val filePath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/$title"
+        csvReader().open(filePath) {
+            readAllWithHeaderAsSequence().forEach { row: Map<String, String> ->
+                val codigoPostal = row["num_cod_postal"] + "-" + row["ext_cod_postal"]
+                val desigPostal = row["desig_postal"] ?: ""
+                zipCodes.add(ZipCodeEntity(codigoPostal = codigoPostal, designacaoPostal = desigPostal))
+            }
+        }
+
+        val file = File(filePath)
+        file.delete()
+
+        return zipCodes
     }
 }

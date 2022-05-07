@@ -5,7 +5,6 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "zipCodes")
 data class ZipCodeEntity(
-    @PrimaryKey(autoGenerate = true) val id : Int,
-    val codigoPostal: String = "",
-    val designacaoPostal: String = ""
+    @PrimaryKey val codigoPostal: String,
+    val designacaoPostal: String
 )

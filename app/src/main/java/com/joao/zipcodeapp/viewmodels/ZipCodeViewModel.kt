@@ -60,4 +60,13 @@ class ZipCodeViewModel @Inject constructor(
                 }
         }
     }
+
+    fun populateDatabase(){
+        viewModelScope.launch {
+            repository
+                .populateDatabase()
+                .flowOn(dispatcher.io())
+                .collect()
+        }
+    }
 }
