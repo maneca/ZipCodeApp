@@ -1,8 +1,13 @@
 package com.joao.zipcodeapp.viewmodels
 
+import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import com.joao.zipcodeapp.domain.repository.ZipCodeRepository
 import com.joao.zipcodeapp.util.DispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,9 +23,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ZipCodeViewModel @Inject constructor(
+    application: Application,
     private val dispatcher: DispatcherProvider,
     private val repository: ZipCodeRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(ZipCodeState())
     val state = _state.asStateFlow()
@@ -45,7 +51,12 @@ class ZipCodeViewModel @Inject constructor(
                 .flowOn(dispatcher.io())
                 .collect { isEmpty ->
                     if (isEmpty) {
-                        repository.getZipCodesFromNetwork()
+                        if(isNetworkAvailable(getApplication<Application?>().applicationContext)){
+                            repository.getZipCodesFromNetwork()
+                        }else{
+                            _eventFlow.emit(UiEvent.NoInternetConnection)
+                        }
+
                     } else {
                         getZipCodesFromLocalDatabase()
                     }
@@ -135,5 +146,32 @@ class ZipCodeViewModel @Inject constructor(
         }
 
         return stringsEscaped.joinToString(separator = " OR ")
+    }
+
+    private fun isNetworkAvailable(context: Context?): Boolean {
+        if (context == null) return false
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                when {
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                        return true
+                    }
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                        return true
+                    }
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
+                        return true
+                    }
+                }
+            }
+        } else {
+            val activeNetworkInfo = connectivityManager.activeNetworkInfo
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected) {
+                return true
+            }
+        }
+        return false
     }
 }

@@ -54,8 +54,16 @@ class MainActivity : ComponentActivity() {
                             isLoading.value = false
                         }
                         is UiEvent.Failed -> {
+                            isLoading.value = false
                             scaffoldState.snackbarHostState.showSnackbar(
                                 message = context.getString(R.string.something_went_wrong),
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                        is UiEvent.NoInternetConnection -> {
+                            isLoading.value = false
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.no_internet),
                                 duration = SnackbarDuration.Short
                             )
                         }
@@ -64,7 +72,8 @@ class MainActivity : ComponentActivity() {
             }
 
             Scaffold(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                scaffoldState = scaffoldState
             ) {
 
                 SystemBroadcastReceiver(DownloadManager.ACTION_DOWNLOAD_COMPLETE) {

@@ -1,5 +1,6 @@
 package com.joao.zipcodeapp.viewmodels
 
+import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
 import com.google.common.truth.Truth
@@ -42,6 +43,9 @@ class ZipCodeViewModelTests {
     @MockK
     private lateinit var mockRepo: ZipCodeRepository
 
+    @MockK
+    private lateinit var mockApp: Application
+
     private lateinit var viewModel: ZipCodeViewModel
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -79,7 +83,7 @@ class ZipCodeViewModelTests {
         coEvery { mockRepo.getZipCodesFromLocalDatabase() } returns flowOf(Resource.Success(listOf(zipCode)))
         coEvery { mockRepo.searchZipCode(any()) } returns flowOf(Resource.Success(listOf(zipCode)))
 
-        viewModel = ZipCodeViewModel(testDispatcherProvider, mockRepo)
+        viewModel = ZipCodeViewModel(mockApp, testDispatcherProvider, mockRepo)
         viewModel.state.test {
             viewModel.searchZipCode("")
             val emission = awaitItem()
@@ -96,7 +100,7 @@ class ZipCodeViewModelTests {
         coEvery { mockRepo.getZipCodesFromLocalDatabase() } returns flowOf(Resource.Error(exception = CustomExceptions.UnknownException))
         coEvery { mockRepo.searchZipCode(any()) } returns flowOf(Resource.Error(exception = CustomExceptions.UnknownException))
 
-        viewModel = ZipCodeViewModel(testDispatcherProvider, mockRepo)
+        viewModel = ZipCodeViewModel(mockApp, testDispatcherProvider, mockRepo)
         viewModel.eventFlow.test {
             viewModel.searchZipCode("")
             val emission = awaitItem()
@@ -113,7 +117,7 @@ class ZipCodeViewModelTests {
         coEvery { mockRepo.getZipCodesFromLocalDatabase() } returns flowOf(Resource.Success(listOf(zipCode)))
         coEvery { mockRepo.populateDatabase() } returns flowOf(true)
 
-        viewModel = ZipCodeViewModel(testDispatcherProvider, mockRepo)
+        viewModel = ZipCodeViewModel(mockApp, testDispatcherProvider, mockRepo)
         viewModel.state.test {
             viewModel.searchZipCode("")
             val emission = awaitItem()

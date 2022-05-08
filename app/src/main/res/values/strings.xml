@@ -4,4 +4,5 @@
     <string name="download_desc">Download file please wait.</string>
     <string name="search">Search</string>
     <string name="something_went_wrong">Something went wrong</string>
+    <string name="no_internet">No internet connection</string>
 </resources>
