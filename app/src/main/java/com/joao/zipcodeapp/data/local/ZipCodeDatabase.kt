@@ -7,7 +7,7 @@ import com.joao.zipcodeapp.data.local.entity.ZipCodeFts
 
 @Database(
     entities = [ZipCodeEntity::class, ZipCodeFts::class],
-    version = 2
+    version = 1
 )
 abstract class ZipCodeDatabase: RoomDatabase() {
 
