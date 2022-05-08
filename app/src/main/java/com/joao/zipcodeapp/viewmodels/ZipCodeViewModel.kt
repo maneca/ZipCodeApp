@@ -43,8 +43,8 @@ class ZipCodeViewModel @Inject constructor(
             repository
                 .isDatabaseEmpty()
                 .flowOn(dispatcher.io())
-                .collect {
-                    if (it) {
+                .collect { isEmpty ->
+                    if (isEmpty) {
                         repository.getZipCodesFromNetwork()
                     } else {
                         getZipCodesFromLocalDatabase()
@@ -72,6 +72,7 @@ class ZipCodeViewModel @Inject constructor(
                                 zipCodes = result.data ?: emptyList(),
                                 exception = result.exception ?: CustomExceptions.UnknownException,
                             )
+                            _eventFlow.emit(UiEvent.Failed)
                         }
                     }
 
@@ -116,6 +117,7 @@ class ZipCodeViewModel @Inject constructor(
                                     zipCodes = result.data ?: emptyList(),
                                     exception = result.exception ?: CustomExceptions.UnknownException,
                                 )
+                                _eventFlow.emit(UiEvent.Failed)
                             }
                         }
                     }
@@ -126,7 +128,9 @@ class ZipCodeViewModel @Inject constructor(
     private fun sanitizeSearchQuery(query: String): String {
         val strings = query.trim().split(" ")
         val stringsEscaped = strings.map {
-            val queryWithEscapedQuotes = it.replace(Regex.fromLiteral("\""), "\"\"")
+            val queryWithEscapedQuotes = it
+                .replace("-", "")
+                .replace(Regex.fromLiteral("\""), "\"\"")
             "*$queryWithEscapedQuotes*"
         }
 

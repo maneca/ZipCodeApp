@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ZipCodeApp</string>
+    <string name="url">https://raw.githubusercontent.com/centraldedados/codigos_postais/master/data/codigos_postais.csv</string>
+    <string name="download_desc">Download file please wait.</string>
+    <string name="search">Search</string>
+    <string name="something_went_wrong">Something went wrong</string>
 </resources>

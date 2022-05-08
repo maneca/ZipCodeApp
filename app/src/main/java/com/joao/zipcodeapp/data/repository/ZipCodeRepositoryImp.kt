@@ -15,14 +15,12 @@ class ZipCodeRepositoryImp(
     private val zipCodeApi: ZipCodeApi
 ): ZipCodeRepository {
     override fun getZipCodesFromLocalDatabase(): Flow<Resource<List<ZipCode>>> = flow {
-
         try {
             val zipCodes = zipCodeDao.getZipCodes().map { it.toZipCode() }
             emit(Resource.Success(zipCodes))
         }catch (ex: Exception){
             emit(Resource.Error(exception = CustomExceptions.UnknownException))
         }
-
     }
 
     override fun getZipCodesFromNetwork() {

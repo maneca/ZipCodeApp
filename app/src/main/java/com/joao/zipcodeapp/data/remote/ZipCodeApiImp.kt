@@ -8,6 +8,7 @@ import android.os.Environment
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import com.joao.zipcodeapp.R
 import com.joao.zipcodeapp.data.local.entity.ZipCodeEntity
 import com.joao.zipcodeapp.domain.remote.ZipCodeApi
 import java.io.File
@@ -16,13 +17,13 @@ class ZipCodeApiImp(
     private val context: Context
 ): ZipCodeApi {
     override fun downloadZipCodes() {
-        val url = "https://raw.githubusercontent.com/centraldedados/codigos_postais/master/data/codigos_postais.csv"
+        val url = context.getString(R.string.url)
         val title = URLUtil.guessFileName(url, null, null)
         val cookie = CookieManager.getInstance().getCookie(url)
         val request = DownloadManager
             .Request(Uri.parse(url))
             .setTitle(title)
-            .setDescription("Download file please wait....")
+            .setDescription(context.getString(R.string.download_desc))
             .addRequestHeader("cookie", cookie)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION)
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title)

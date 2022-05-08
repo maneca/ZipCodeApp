@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,8 +40,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel = hiltViewModel<ZipCodeViewModel>()
             val isLoading = remember { mutableStateOf(true) }
-
+            val scaffoldState = rememberScaffoldState()
             val state = viewModel.state.collectAsState()
+            val context = LocalContext.current
 
             LaunchedEffect(key1 = true) {
                 viewModel.eventFlow.collectLatest { event ->
@@ -50,6 +52,12 @@ class MainActivity : ComponentActivity() {
                         }
                         is UiEvent.ZipCodesLoaded -> {
                             isLoading.value = false
+                        }
+                        is UiEvent.Failed -> {
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.something_went_wrong),
+                                duration = SnackbarDuration.Short
+                            )
                         }
                     }
                 }
@@ -81,7 +89,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp),
-                                label = { Text(text = "Search") },
+                                label = { Text(text = stringResource(id = R.string.search)) },
                                 singleLine = true,
                                 leadingIcon = { Icon(Icons.Filled.Search, "") },
                                 textStyle = TextStyle(color = MaterialTheme.colors.onSurface),
