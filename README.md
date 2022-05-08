@@ -9,6 +9,7 @@ Libraries used:
 - Coroutines
 - Mockk
 - Turbine
+- [Kotlin-csv](https://github.com/doyaaaaaken/kotlin-csv)
 
 Zip codes are downloaded at first start if there is internet connection.
 Implemented a Full Text Search using Room.
