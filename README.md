@@ -12,4 +12,7 @@ Libraries used:
 - [Kotlin-csv](https://github.com/doyaaaaaken/kotlin-csv)
 
 Zip codes are downloaded at first start if there is internet connection.
+
 Implemented a Full Text Search using Room.
+
+Implemented unit tests for Repositories, ViewModels and Dao.
