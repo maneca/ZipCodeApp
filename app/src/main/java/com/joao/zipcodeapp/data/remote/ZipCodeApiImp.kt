@@ -25,7 +25,7 @@ class ZipCodeApiImp(
             .setTitle(title)
             .setDescription(context.getString(R.string.download_desc))
             .addRequestHeader("cookie", cookie)
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION)
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title)
 
         val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
